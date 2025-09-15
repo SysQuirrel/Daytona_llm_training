@@ -1,14 +1,8 @@
 #!/usr/bin/env python3
 """
-Daytona Electronics LLM Trainer
-Deploy and train language            self.logger.info("Creating simple sandbox without pre-installed packages...")
-            # Use basic Python image and install packages after sandbox creation
-            # This is more reliable than pre-building complex Docker images
-            sandbox_params = CreateSandboxFromImageParams(
-                image="python:3.12-slim",
-                resources=resources
-            )ctronics textbooks using Daytona cloud sandboxes
-Consumes Daytona credits efficiently for maximum computational value
+Electronics LLM Trainer - Deployment Script
+Deploy and train language models on electronics textbooks using Daytona cloud
+Maximizes computational value within available credits
 """
 
 import os
@@ -120,8 +114,8 @@ class DaytonaLLMTrainer:
         """Upload only essential files needed for dependency installation"""
         # Upload the training script - use simplified version
         self.logger.info("Uploading essential files to sandbox...")
-        with open("simple_llm_trainer.py", 'rb') as script_file:
-            self.sandbox.fs.upload_file(script_file.read(), "simple_llm_trainer.py")
+        with open("trainer.py", 'rb') as script_file:
+            self.sandbox.fs.upload_file(script_file.read(), "trainer.py")
         
         # Upload requirements
         with open("requirements.txt", 'rb') as req_file:
@@ -209,6 +203,7 @@ run_command("python -m pip install PyPDF2", "PyPDF2")
 run_command("python -m pip install numpy", "NumPy")
 run_command("python -m pip install tqdm", "tqdm")
 run_command("python -m pip install python-dotenv", "python-dotenv")
+run_command("python -m pip install psutil", "psutil")
 
 print("=== VERIFYING INSTALLATIONS ===")
 
@@ -237,6 +232,9 @@ try:
     
     import dotenv
     print(f"✓ python-dotenv available")
+    
+    import psutil
+    print(f"✓ psutil version: {psutil.__version__}")
     
     print("=== ALL CORE PACKAGES VERIFIED SUCCESSFULLY ===")
     
@@ -292,7 +290,7 @@ try:
     # Start training in background and redirect output to log file
     with open('training_output.log', 'w') as log_file:
         # Add unbuffered output to see real-time logs
-        process = subprocess.Popen([sys.executable, '-u', 'simple_llm_trainer.py'], 
+        process = subprocess.Popen([sys.executable, '-u', 'trainer.py'], 
                                   stdout=log_file, 
                                   stderr=subprocess.STDOUT,
                                   cwd=os.getcwd(),

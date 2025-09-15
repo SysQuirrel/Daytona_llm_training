@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Simple LLM Trainer - Text-only version
-Simplified version that focuses on reliable text extraction and training
-without complex multimodal processing that can cause crashes.
+Electronics LLM Trainer - Core Training Module
+Memory-aware text extraction and training optimized for electronics textbooks
+Intelligent resource management with 75% memory threshold protection
 """
 
 import os
@@ -38,44 +38,77 @@ class SimpleLLMTrainer:
     """Simplified LLM trainer focusing on text extraction only"""
     
     def __init__(self):
-        self.model_name = "microsoft/DialoGPT-small"  # Smaller, faster model
-        self.max_length = 128  # Shorter sequences for faster training
-        self.batch_size = 4   # Larger batch for efficiency
-        self.learning_rate = 2e-4  # Higher learning rate for faster convergence
+        self.model_name = "microsoft/DialoGPT-medium"  # 345M params for better quality
+        self.max_length = 256  # Longer sequences for better context
+        self.batch_size = 2   # Smaller batch for larger model
+        self.learning_rate = 1e-4  # More conservative learning rate
         self.epochs = 1
 
     def extract_text_from_pdf(self, pdf_path):
-        """Simple text extraction from PDF without OCR"""
+        """Memory-aware text extraction from PDF with 75% resource threshold"""
+        import psutil
+        import gc
+        
         logger.info(f"Extracting text from {pdf_path.name}...")
         text_content = ""
+        
+        # Get system memory info
+        memory = psutil.virtual_memory()
+        available_memory_gb = memory.available / (1024**3)
+        memory_threshold = 0.75  # Use 75% of available memory
+        max_memory_mb = (available_memory_gb * memory_threshold * 1024)
+        
+        logger.info(f"Available memory: {available_memory_gb:.1f}GB, using max {max_memory_mb:.0f}MB")
         
         try:
             with open(pdf_path, 'rb') as file:
                 pdf_reader = PyPDF2.PdfReader(file)
-                logger.info(f"Found {len(pdf_reader.pages)} pages")
+                total_pages = len(pdf_reader.pages)
+                logger.info(f"Found {total_pages} pages")
                 
-                # Process only first 50 pages to avoid memory issues
-                max_pages = min(50, len(pdf_reader.pages))
-                for page_num in range(max_pages):
+                processed_pages = 0
+                current_memory_mb = 0
+                
+                for page_num in range(total_pages):
                     try:
+                        # Check memory usage before processing each page
+                        process = psutil.Process()
+                        current_memory_mb = process.memory_info().rss / (1024**2)
+                        
+                        # Stop if we're approaching memory limit
+                        if current_memory_mb > max_memory_mb:
+                            logger.warning(f"Memory threshold reached ({current_memory_mb:.0f}MB > {max_memory_mb:.0f}MB)")
+                            logger.info(f"Processed {processed_pages}/{total_pages} pages ({processed_pages/total_pages*100:.1f}%) before hitting memory limit")
+                            break
+                        
                         page = pdf_reader.pages[page_num]
                         page_text = page.extract_text()
                         if page_text.strip():
                             text_content += f"\n\nPage {page_num + 1}:\n{page_text}"
+                            processed_pages += 1
                             
-                        # Log progress every 10 pages
-                        if (page_num + 1) % 10 == 0:
-                            logger.info(f"Processed {page_num + 1}/{max_pages} pages")
+                        # Log progress every 25 pages and show memory usage
+                        if (page_num + 1) % 25 == 0:
+                            logger.info(f"Processed {processed_pages}/{total_pages} pages, Memory: {current_memory_mb:.0f}MB")
+                            
+                        # Garbage collect every 50 pages to manage memory
+                        if (page_num + 1) % 50 == 0:
+                            gc.collect()
                             
                     except Exception as e:
                         logger.warning(f"Error processing page {page_num + 1}: {e}")
                         continue
+                
+                # Final memory cleanup
+                gc.collect()
                         
         except Exception as e:
             logger.error(f"Error reading PDF {pdf_path}: {e}")
             return ""
             
-        logger.info(f"Extracted {len(text_content.split())} words from {pdf_path.name}")
+        final_words = len(text_content.split())
+        logger.info(f"Extracted {final_words} words from {processed_pages}/{total_pages} pages of {pdf_path.name}")
+        logger.info(f"Coverage: {processed_pages/total_pages*100:.1f}% of the book")
         return text_content
 
     def process_books(self):
@@ -278,15 +311,15 @@ class SimpleLLMTrainer:
                 per_device_train_batch_size=self.batch_size,
                 per_device_eval_batch_size=self.batch_size,
                 eval_strategy="steps",
-                save_strategy="steps",
-                save_steps=200,  # Less frequent saves
-                eval_steps=200,  # Less frequent evaluation
-                logging_steps=25,  # More frequent logging for monitoring
+                save_strategy="steps", 
+                save_steps=100,  # More frequent saves
+                eval_steps=100,  # More frequent evaluation
+                logging_steps=10,  # Detailed logging for monitoring
                 learning_rate=self.learning_rate,
                 weight_decay=0.01,
-                warmup_steps=25,  # Fewer warmup steps
+                warmup_steps=100,  # More warmup for stability
                 load_best_model_at_end=True,
-                gradient_accumulation_steps=4,  # Larger effective batch size
+                gradient_accumulation_steps=8,  # Larger effective batch size
                 fp16=False,  # Disable mixed precision for CPU
                 dataloader_pin_memory=False,
                 report_to=[],

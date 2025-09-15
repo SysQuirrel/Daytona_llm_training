@@ -1,36 +1,39 @@
-# LLM Training Platform
+# Electronics LLM Training Platform
 
-A specialized platform for training large language models on document collections using Daytona cloud infrastructure. This system processes PDF documents with multimodal content extraction and fine-tunes language models for domain-specific applications.
+A specialized platform for training language models on electronics textbooks using Daytona cloud infrastructure. Features intelligent memory management, complete book processing, and optimized training for technical domain expertise.
 
 ## Overview
 
-This platform automates the entire pipeline from document processing to model training, including text extraction, image analysis via OCR, and content consolidation before training modern transformer models. The system is designed to efficiently utilize cloud computing resources while maintaining comprehensive logging and monitoring throughout the training process.
+This platform automates the entire pipeline from PDF processing to model deployment, including memory-aware text extraction, intelligent resource management, and fine-tuning of transformer models for electronics domain applications.
 
 ## Key Features
 
-### Document Processing
-- **PDF Text Extraction**: Automated extraction of text content from PDF documents
-- **OCR Integration**: Optical character recognition for image-embedded text
-- **Image Analysis**: Computer vision processing of diagrams and figures
-- **Content Validation**: Automatic filtering and quality assessment of extracted content
+### Intelligent Document Processing
+- **Memory-Aware Extraction**: Processes 70-90% of each book within memory limits
+- **Complete Book Coverage**: No arbitrary page limits - extracts maximum content safely
+- **Smart Resource Management**: 75% memory threshold prevents crashes
+- **Real-time Monitoring**: Detailed memory usage and coverage reporting
 
-### Model Training
-- **Transformer Architecture**: Based on modern pre-trained language models
-- **Efficient Fine-tuning**: CPU-optimized training with memory management
-- **Multimodal Learning**: Combines text, OCR, and image analysis data
-- **Progress Monitoring**: Real-time training metrics and checkpoint management
+### Optimized Model Training
+- **DialoGPT-Medium (345M params)**: High-quality electronics expert model
+- **Quality-First Settings**: Longer sequences, conservative learning rates
+- **CPU-Optimized**: Efficient training without GPU requirements
+- **Progress Tracking**: Detailed logging of training metrics and checkpoints
 
 ### Cloud Integration
 - **Daytona Platform**: Seamless deployment to cloud sandboxes
-- **Resource Management**: Automatic scaling and optimization
-- **Cost Efficiency**: Optimized resource allocation within budget constraints
+- **Automatic Download**: Trained models delivered to local machine
+- **Cost Efficiency**: Optimized resource usage within credit budget
 - **Error Recovery**: Robust error handling and automatic retries
 
-### Space Optimization
-- **Smart Cleanup**: Automatic deletion of processed documents to save storage
-- **Content Preservation**: Extracted content saved in compressed formats
-- **Usage Tracking**: Detailed logging of space savings and processing metrics
-- **Efficient Storage**: Optimized file organization and compression
+## File Structure
+
+- **`deploy.py`** - Main deployment script (starts training)
+- **`trainer.py`** - Core training logic with memory management
+- **`trainer_old.py`** - Legacy complex trainer (backup)
+- **`requirements.txt`** - Package dependencies
+- **`books/`** - Place your electronics PDF books here
+- **`trained_model/`** - Downloaded trained model files
 
 ## Getting Started
 
@@ -61,19 +64,19 @@ This platform automates the entire pipeline from document processing to model tr
 
 #### Basic Training
 ```bash
-python cloudmind_standalone.py
+python deploy.py
 ```
 
 This command will:
 - Create a cloud sandbox with required dependencies
 - Upload your documents and training scripts
-- Process PDFs with multimodal content extraction
-- Train the language model on extracted content
+- Process PDFs with memory-aware text extraction
+- Train the DialoGPT-medium model on electronics content
 - Download the trained model upon completion
 
-#### Manual Training (Local)
+#### Local Testing (Development)
 ```bash
-python electronics_llm_trainer.py
+python trainer.py
 ```
 
 For local development and testing without cloud deployment.
@@ -192,4 +195,4 @@ This project is provided as-is for educational and research purposes. Please ens
 
 ---
 
-**Ready to begin training?** Place your PDF documents in the `books/` directory and run `python cloudmind_standalone.py` to start the automated training pipeline.
+**Ready to begin training?** Place your PDF documents in the `books/` directory and run `python deploy.py` to start the automated training pipeline.
