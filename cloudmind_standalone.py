@@ -1,11 +1,6 @@
 #!/usr/bin/env python3
 """
-Daytona         # Create resources object with custom specifications (within account limits)
-        resources = Resources(
-            cpu=4,      # 4 CPU cores (maximum allowed)
-            memory=6,   # 6GB RAM (testing limit)
-            disk=10     # 10GB disk space (maximum allowed)
-        )onics LLM Trainer
+Daytona Electronics LLM Trainer
 Deploy and train language models on electronics textbooks using Daytona cloud sandboxes
 Consumes Daytona credits efficiently for maximum computational value
 """
@@ -13,7 +8,11 @@ Consumes Daytona credits efficiently for maximum computational value
 import os
 import logging
 from pathlib import Path
+from dotenv import load_dotenv
 from daytona import Daytona, DaytonaConfig, Resources, CreateSandboxFromImageParams, Image
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Setup comprehensive logging
 logging.basicConfig(
@@ -79,8 +78,8 @@ class DaytonaLLMTrainer:
             # Create resources object with custom specifications (within account limits)
             resources = Resources(
                 cpu=4,      # 4 CPU cores (conservative)
-                memory=8,   # 4GB RAM (fits within 10GB total quota)
-                disk=10      # 8GB disk space (conservative)
+                memory=4,   # 4GB RAM (fits within 10GB total quota)
+                disk=10      # 10GB disk space (maximum)
             )
             
             self.logger.info("Building image with pre-installed packages...")
@@ -123,6 +122,14 @@ class DaytonaLLMTrainer:
         # Upload requirements
         with open("requirements.txt", 'rb') as req_file:
             self.sandbox.fs.upload_file(req_file.read(), "requirements.txt")
+        
+        # Upload .env file (contains API keys and configuration)
+        if os.path.exists(".env"):
+            with open(".env", 'rb') as env_file:
+                self.sandbox.fs.upload_file(env_file.read(), ".env")
+            self.logger.info(".env file uploaded successfully.")
+        else:
+            self.logger.warning(".env file not found - API key loading may fail!")
         
         self.logger.info("Essential files uploaded successfully.")
 
@@ -500,7 +507,12 @@ print("=== END LOG RETRIEVAL ===")
             self.logger.info("Sandbox deleted.")
 
 if __name__ == "__main__":
-    API_KEY = "dtn_eaa634a793b76c1aa5f949f9646e665dd8989e2ac0280b9add1177fb0a58ce1f"  # Replace with your actual API key
+    # Load API key from environment variable
+    API_KEY = os.getenv("daytona_key")
+    if not API_KEY:
+        print("❌ ERROR: daytona_key not found in .env file!")
+        print("Please create a .env file with: daytona_key=your_api_key_here")
+        exit(1)
     
     trainer = DaytonaLLMTrainer(api_key=API_KEY)
     

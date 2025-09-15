@@ -1,2 +1,39 @@
+# Environment variables (contains API keys)
 .env
+
+# Log files
+*.log
+daytona_*.log
+training_*.log
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Books directory (may contain copyrighted material)
 books/*
+!books/README.txt
+
+# Trained models (large files)
+trained_model/
+cache/
+processed/
+
+# IDE/Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+*.tmp
