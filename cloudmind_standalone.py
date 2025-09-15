@@ -204,6 +204,7 @@ if not run_command("python -m pip install --index-url https://download.pytorch.o
 # Install core packages
 run_command("python -m pip install transformers", "Transformers")
 run_command("python -m pip install datasets", "Datasets")
+run_command("python -m pip install 'accelerate>=0.26.0'", "Accelerate")
 run_command("python -m pip install PyPDF2", "PyPDF2")
 run_command("python -m pip install numpy", "NumPy")
 run_command("python -m pip install tqdm", "tqdm")
@@ -221,6 +222,9 @@ try:
     
     import datasets
     print(f"✓ Datasets version: {datasets.__version__}")
+    
+    import accelerate
+    print(f"✓ Accelerate version: {accelerate.__version__}")
     
     import PyPDF2
     print(f"✓ PyPDF2 available")
@@ -285,14 +289,16 @@ print(f"Current working directory: {os.getcwd()}")
 print(f"Files in directory: {os.listdir('.')}")
 
 try:
-            # Start training in background and redirect output to log file
-            with open('training_output.log', 'w') as log_file:
-                # Add unbuffered output to see real-time logs
-                process = subprocess.Popen([sys.executable, '-u', 'simple_llm_trainer.py'], 
-                                          stdout=log_file, 
-                                          stderr=subprocess.STDOUT,
-                                          cwd=os.getcwd(),
-                                          bufsize=0)  # Unbuffered        # Write process ID to file for monitoring
+    # Start training in background and redirect output to log file
+    with open('training_output.log', 'w') as log_file:
+        # Add unbuffered output to see real-time logs
+        process = subprocess.Popen([sys.executable, '-u', 'simple_llm_trainer.py'], 
+                                  stdout=log_file, 
+                                  stderr=subprocess.STDOUT,
+                                  cwd=os.getcwd(),
+                                  bufsize=0)  # Unbuffered
+        
+        # Write process ID to file for monitoring
         with open('training_pid.txt', 'w') as pid_file:
             pid_file.write(str(process.pid))
         
@@ -407,7 +413,7 @@ except Exception as e:
                 response = self.sandbox.process.code_run(status_command)
                 self.log_sandbox_response(response, f"TRAINING_STATUS_CHECK_{elapsed_time}")
                 
-                if response.exit_code == 0:  # Training completed
+                if response.exit_code == 0 and "COMPLETED" in response.result:  # Training actually completed
                     self.log_operation("TRAINING_COMPLETED", {
                         "total_time": elapsed_time,
                         "final_output": response.result

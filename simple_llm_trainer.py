@@ -38,10 +38,10 @@ class SimpleLLMTrainer:
     """Simplified LLM trainer focusing on text extraction only"""
     
     def __init__(self):
-        self.model_name = "microsoft/DialoGPT-medium"  # Reliable, smaller model
-        self.max_length = 256
-        self.batch_size = 2
-        self.learning_rate = 5e-5
+        self.model_name = "microsoft/DialoGPT-small"  # Smaller, faster model
+        self.max_length = 128  # Shorter sequences for faster training
+        self.batch_size = 4   # Larger batch for efficiency
+        self.learning_rate = 2e-4  # Higher learning rate for faster convergence
         self.epochs = 1
 
     def extract_text_from_pdf(self, pdf_path):
@@ -277,17 +277,17 @@ class SimpleLLMTrainer:
                 num_train_epochs=self.epochs,
                 per_device_train_batch_size=self.batch_size,
                 per_device_eval_batch_size=self.batch_size,
-                evaluation_strategy="steps",
+                eval_strategy="steps",
                 save_strategy="steps",
-                save_steps=100,
-                eval_steps=100,
-                logging_steps=50,
+                save_steps=200,  # Less frequent saves
+                eval_steps=200,  # Less frequent evaluation
+                logging_steps=25,  # More frequent logging for monitoring
                 learning_rate=self.learning_rate,
                 weight_decay=0.01,
-                warmup_steps=50,
+                warmup_steps=25,  # Fewer warmup steps
                 load_best_model_at_end=True,
-                gradient_accumulation_steps=2,
-                fp16=True,
+                gradient_accumulation_steps=4,  # Larger effective batch size
+                fp16=False,  # Disable mixed precision for CPU
                 dataloader_pin_memory=False,
                 report_to=[],
                 logging_first_step=True,
