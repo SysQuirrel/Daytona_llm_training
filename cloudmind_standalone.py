@@ -78,7 +78,7 @@ class DaytonaLLMTrainer:
             # Create resources object with custom specifications (within account limits)
             resources = Resources(
                 cpu=4,      # 4 CPU cores (conservative)
-                memory=4,   # 4GB RAM (fits within 10GB total quota)
+                memory=8,   # 4GB RAM (fits within 10GB total quota)
                 disk=10      # 10GB disk space (maximum)
             )
             
