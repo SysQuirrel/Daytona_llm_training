@@ -1,5 +1,5 @@
-# Essential requirements for LLM training (CPU-only version for Alpine Linux)
-# Using CPU-only PyTorch to minimize storage requirements (saves ~3GB vs CUDA version)
+# Essential requirements for LLM training (CPU-only version)
+# Simplified version focusing on text extraction only
 --index-url https://download.pytorch.org/whl/cpu
 torch>=2.0.0
 transformers>=4.35.0
@@ -8,8 +8,3 @@ PyPDF2>=3.0.0
 numpy>=1.24.0
 tqdm>=4.65.0
 python-dotenv>=1.0.0
-# OCR and image processing for multimodal content extraction (~100MB total)
-pytesseract>=0.3.10
-pdf2image>=1.16.0
-Pillow>=10.0.0
-opencv-python-headless>=4.8.0

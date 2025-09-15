@@ -1,7 +1,13 @@
 #!/usr/bin/env python3
 """
 Daytona Electronics LLM Trainer
-Deploy and train language models on electronics textbooks using Daytona cloud sandboxes
+Deploy and train language            self.logger.info("Creating simple sandbox without pre-installed packages...")
+            # Use basic Python image and install packages after sandbox creation
+            # This is more reliable than pre-building complex Docker images
+            sandbox_params = CreateSandboxFromImageParams(
+                image="python:3.12-slim",
+                resources=resources
+            )ctronics textbooks using Daytona cloud sandboxes
 Consumes Daytona credits efficiently for maximum computational value
 """
 
@@ -84,15 +90,13 @@ class DaytonaLLMTrainer:
             
             self.logger.info("Building image with pre-installed packages...")
             # Create sandbox parameters with custom resources - using Debian slim for PyTorch compatibility
-            # Alpine has glibc/musl compatibility issues with PyTorch
+            # Install packages step by step to avoid conflicts
             image = (Image.base("python:3.12-slim")
-                    .run_commands("apt-get update && apt-get install -y tesseract-ocr poppler-utils libopencv-dev")
-                    .pip_install("torch", "torchvision", 
-                               index_url="https://download.pytorch.org/whl/cpu")
-                    .pip_install("transformers>=4.35.0", "datasets>=2.12.0", 
-                               "PyPDF2>=3.0.0", "numpy>=1.24.0", "tqdm>=4.65.0")
-                    .pip_install("pytesseract>=0.3.10", "pdf2image>=1.16.0", 
-                               "Pillow>=10.0.0", "opencv-python-headless>=4.8.0"))
+                    .run_commands("apt-get update && apt-get install -y build-essential && rm -rf /var/lib/apt/lists/*")
+                    .run_commands("python -m pip install --upgrade pip setuptools wheel")
+                    .run_commands("python -m pip install --index-url https://download.pytorch.org/whl/cpu torch")
+                    .run_commands("python -m pip install transformers datasets")
+                    .run_commands("python -m pip install PyPDF2 numpy tqdm python-dotenv"))
             
             params = CreateSandboxFromImageParams(
                 image=image,
@@ -114,10 +118,10 @@ class DaytonaLLMTrainer:
 
     def upload_essential_files(self):
         """Upload only essential files needed for dependency installation"""
-        # Upload the training script
+        # Upload the training script - use simplified version
         self.logger.info("Uploading essential files to sandbox...")
-        with open("electronics_llm_trainer.py", 'rb') as script_file:
-            self.sandbox.fs.upload_file(script_file.read(), "electronics_llm_trainer.py")
+        with open("simple_llm_trainer.py", 'rb') as script_file:
+            self.sandbox.fs.upload_file(script_file.read(), "simple_llm_trainer.py")
         
         # Upload requirements
         with open("requirements.txt", 'rb') as req_file:
@@ -154,90 +158,111 @@ class DaytonaLLMTrainer:
         self.logger.info("All books uploaded successfully.")
 
     def install_dependencies(self):
-        """Check that packages are available in the sandbox (pre-installed in image)"""
+        """Install required packages in the sandbox"""
         try:
-            self.log_operation("DEPENDENCY_VERIFICATION_START")
+            self.log_operation("DEPENDENCY_INSTALLATION_START")
             
-            # Quick verification that packages are available
-            verify_command = """
+            # Install dependencies step by step for better error handling
+            install_command = """
+import subprocess
 import sys
-import traceback
+import os
+
+print("=== DEPENDENCY INSTALLATION START ===")
+
+def run_command(cmd, description):
+    print(f"Installing {description}...")
+    try:
+        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=300)
+        if result.returncode == 0:
+            print(f"✓ {description} installed successfully")
+            return True
+        else:
+            print(f"✗ {description} failed:")
+            print(f"STDOUT: {result.stdout}")
+            print(f"STDERR: {result.stderr}")
+            return False
+    except subprocess.TimeoutExpired:
+        print(f"✗ {description} installation timed out")
+        return False
+    except Exception as e:
+        print(f"✗ {description} installation error: {e}")
+        return False
+
+# Update system and install build tools
+print("Updating system packages...")
+run_command("apt-get update && apt-get install -y build-essential", "build tools")
+
+# Upgrade pip
+run_command("python -m pip install --upgrade pip", "pip upgrade")
+
+# Install PyTorch (CPU version)
+if not run_command("python -m pip install --index-url https://download.pytorch.org/whl/cpu torch", "PyTorch CPU"):
+    print("Falling back to standard PyTorch...")
+    run_command("python -m pip install torch --index-url https://download.pytorch.org/whl/cpu", "PyTorch fallback")
+
+# Install core packages
+run_command("python -m pip install transformers", "Transformers")
+run_command("python -m pip install datasets", "Datasets")
+run_command("python -m pip install PyPDF2", "PyPDF2")
+run_command("python -m pip install numpy", "NumPy")
+run_command("python -m pip install tqdm", "tqdm")
+run_command("python -m pip install python-dotenv", "python-dotenv")
+
+print("=== VERIFYING INSTALLATIONS ===")
+
+# Verify installations
 try:
-    print("=== PACKAGE VERIFICATION START ===")
-    
-    print("Importing torch...")
     import torch
     print(f"✓ PyTorch version: {torch.__version__}")
     
-    print("Importing transformers...")
     import transformers
     print(f"✓ Transformers version: {transformers.__version__}")
     
-    print("Importing datasets...")
     import datasets
     print(f"✓ Datasets version: {datasets.__version__}")
     
-    print("Importing PyPDF2...")
     import PyPDF2
     print(f"✓ PyPDF2 available")
     
-    print("Importing numpy...")
     import numpy
     print(f"✓ NumPy version: {numpy.__version__}")
     
-    print("Importing tqdm...")
     import tqdm
     print(f"✓ tqdm version: {tqdm.__version__}")
     
-    print("Importing OCR and image processing packages...")
-    import pytesseract
-    print(f"✓ pytesseract available")
+    import dotenv
+    print(f"✓ python-dotenv available")
     
-    import cv2
-    print(f"✓ OpenCV version: {cv2.__version__}")
-    
-    from pdf2image import convert_from_path
-    print(f"✓ pdf2image available")
-    
-    from PIL import Image
-    print(f"✓ Pillow available")
-    
-    # Test tesseract binary
-    try:
-        result = pytesseract.get_tesseract_version()
-        print(f"✓ Tesseract OCR version: {result}")
-    except Exception as e:
-        print(f"⚠️ Tesseract warning: {e}")
-    
-    print("=== ALL PACKAGES VERIFIED SUCCESSFULLY (INCLUDING MULTIMODAL) ===")
+    print("=== ALL CORE PACKAGES VERIFIED SUCCESSFULLY ===")
     
 except Exception as e:
     print(f"=== PACKAGE VERIFICATION FAILED ===")
     print(f"ERROR: {str(e)}")
-    print("TRACEBACK:")
+    import traceback
     traceback.print_exc()
-    sys.exit(1)
+    exit(1)
 """
             
-            self.logger.info("Running package verification script...")
-            response = self.sandbox.process.code_run(verify_command)
+            self.logger.info("Installing packages in sandbox...")
+            response = self.sandbox.process.code_run(install_command)
             
-            self.log_sandbox_response(response, "PACKAGE_VERIFICATION")
+            self.log_sandbox_response(response, "DEPENDENCY_INSTALLATION")
             
             if response.exit_code != 0:
-                self.log_operation("DEPENDENCY_VERIFICATION_FAILED", {
+                self.log_operation("DEPENDENCY_INSTALLATION_FAILED", {
                     "exit_code": response.exit_code,
                     "output": response.result
                 })
                 return False
             
-            self.log_operation("DEPENDENCY_VERIFICATION_SUCCESS", {
-                "verification_output": response.result
+            self.log_operation("DEPENDENCY_INSTALLATION_SUCCESS", {
+                "installation_output": response.result
             })
             return True
             
         except Exception as e:
-            self.log_operation("DEPENDENCY_VERIFICATION_ERROR", error=e)
+            self.log_operation("DEPENDENCY_INSTALLATION_ERROR", error=e)
             return False
 
     def run_training(self):
@@ -260,16 +285,14 @@ print(f"Current working directory: {os.getcwd()}")
 print(f"Files in directory: {os.listdir('.')}")
 
 try:
-    # Start training in background and redirect output to log file
-    with open('training_output.log', 'w') as log_file:
-        # Add unbuffered output to see real-time logs
-        process = subprocess.Popen([sys.executable, '-u', 'electronics_llm_trainer.py'], 
-                                  stdout=log_file, 
-                                  stderr=subprocess.STDOUT,
-                                  cwd=os.getcwd(),
-                                  bufsize=0)  # Unbuffered
-        
-        # Write process ID to file for monitoring
+            # Start training in background and redirect output to log file
+            with open('training_output.log', 'w') as log_file:
+                # Add unbuffered output to see real-time logs
+                process = subprocess.Popen([sys.executable, '-u', 'simple_llm_trainer.py'], 
+                                          stdout=log_file, 
+                                          stderr=subprocess.STDOUT,
+                                          cwd=os.getcwd(),
+                                          bufsize=0)  # Unbuffered        # Write process ID to file for monitoring
         with open('training_pid.txt', 'w') as pid_file:
             pid_file.write(str(process.pid))
         
