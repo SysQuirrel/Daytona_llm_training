@@ -356,7 +356,7 @@ except Exception as e:
         
         try:
             self.log_operation("TRAINING_MONITORING_START")
-            max_wait_time = 3600  # 1 hour max
+            max_wait_time = 28800  # 8 hours max (enough for DialoGPT-medium training)
             check_interval = 30   # Check every 30 seconds
             elapsed_time = 0
             

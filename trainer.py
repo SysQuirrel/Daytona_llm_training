@@ -41,10 +41,10 @@ class SimpleLLMTrainer:
     """Simplified LLM trainer focusing on text extraction only"""
     
     def __init__(self):
-        self.model_name = "microsoft/DialoGPT-medium"  # 345M params for better quality
-        self.max_length = 256  # Longer sequences for better context
-        self.batch_size = 2   # Smaller batch for larger model
-        self.learning_rate = 1e-4  # More conservative learning rate
+        self.model_name = "microsoft/DialoGPT-small"  # Back to 117M params for stability
+        self.max_length = 128  # Shorter sequences to save memory
+        self.batch_size = 1   # Smallest batch size
+        self.learning_rate = 1e-4  # Good learning rate
         self.epochs = 1
 
     def extract_text_from_pdf(self, pdf_path):
@@ -67,7 +67,10 @@ class SimpleLLMTrainer:
             with open(pdf_path, 'rb') as file:
                 pdf_reader = PyPDF2.PdfReader(file)
                 total_pages = len(pdf_reader.pages)
-                logger.info(f"Found {total_pages} pages")
+                # Add reasonable page limit to prevent overwhelming the training process
+                max_pages_limit = 150  # Reasonable limit for 4GB RAM
+                total_pages = min(total_pages, max_pages_limit)
+                logger.info(f"Found {len(pdf_reader.pages)} pages, processing up to {total_pages} pages")
                 
                 processed_pages = 0
                 current_memory_mb = 0
