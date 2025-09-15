@@ -3,6 +3,9 @@
 Electronics LLM Trainer - Core Training Module
 Memory-aware text extraction and training optimized for electronics textbooks
 Intelligent resource management with 75% memory threshold protection
+
+Copyright (c) 2025 SysQuirrel
+Licensed under the MIT License - see LICENSE file for details
 """
 
 import os

@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 """
-Electronics LLM Trainer for Daytona
+Electronics LLM Trainer for Daytona (Legacy Version)
+Original complex trainer with multimodal processing - kept as backup
 This script runs in the Daytona sandbox to train an LLM on electronics textbooks.
+
+Copyright (c) 2025 SysQuirrel
+Licensed under the MIT License - see LICENSE file for details
 """
 
 import os

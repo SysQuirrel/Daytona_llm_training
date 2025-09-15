@@ -1,5 +1,7 @@
 # Electronics LLM Training Platform
 
+![License](https://img.shields.io/badge/License-MIT-blue.svg)
+
 A specialized platform for training language models on electronics textbooks using Daytona cloud infrastructure. Features intelligent memory management, complete book processing, and optimized training for technical domain expertise.
 
 ## Overview
@@ -191,7 +193,11 @@ This platform is designed for extensibility. Common modifications include:
 
 ## License
 
-This project is provided as-is for educational and research purposes. Please ensure compliance with terms of service for all external services used.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+Copyright (c) 2025 SysQuirrel
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files, to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software.
 
 ---
 

@@ -3,6 +3,9 @@
 Electronics LLM Trainer - Deployment Script
 Deploy and train language models on electronics textbooks using Daytona cloud
 Maximizes computational value within available credits
+
+Copyright (c) 2025 SysQuirrel
+Licensed under the MIT License - see LICENSE file for details
 """
 
 import os
